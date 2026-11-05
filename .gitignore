@@ -4,3 +4,14 @@ __pycache__/
 build/
 dist/
 .venv/
+.pytest_cache/
+.ruff_cache/
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+coverage.xml
+.coverage

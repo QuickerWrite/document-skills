@@ -1,12 +1,40 @@
 [build-system]
-requires = ["setuptools>=68"]
+requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
+
 [project]
 name = "quickerwrite-documents-skills"
-version = "0.1.0"
+version = "0.2.0"
+description = "Standalone Word, PowerPoint and Excel skills, generation, editing and rendering tools"
+readme = "README.md"
+license = "MIT"
 requires-python = ">=3.12"
-dependencies = ["defusedxml>=0.7.1", "pypdfium2>=4.30", "Pillow>=10", "python-pptx>=1.0", "python-docx>=1.1"]
+dependencies = ["defusedxml>=0.7.1", "pypdfium2>=4.30", "Pillow>=10", "python-pptx>=1.0", "python-docx>=1.1", "openpyxl>=3.1.5", "lxml>=5"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "build>=1.2", "ruff>=0.11", "PyYAML>=6"]
+
+[project.urls]
+Repository = "https://github.com/QuickerWrite/documents-skills"
+Issues = "https://github.com/QuickerWrite/documents-skills/issues"
+
 [project.scripts]
 qw-documents-worker = "document_skills.worker:main"
+document-skills = "document_skills.cli:main"
+
 [tool.setuptools.packages.find]
 include = ["document_skills*"]
+
+[tool.setuptools.data-files]
+"share/document-skills/skills/word" = ["skills/word/SKILL.md"]
+"share/document-skills/skills/ppt" = ["skills/ppt/SKILL.md"]
+"share/document-skills/skills/excel" = ["skills/excel/SKILL.md"]
+"share/document-skills/skills/word/references" = ["skills/word/references/workflows.md"]
+"share/document-skills/skills/ppt/references" = ["skills/ppt/references/workflows.md"]
+"share/document-skills/skills/excel/references" = ["skills/excel/references/workflows.md"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests", "test_worker.py"]
+
+[tool.ruff.lint]
+select = ["F"]

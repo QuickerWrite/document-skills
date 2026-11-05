@@ -1,29 +1,57 @@
-# QuickerWrite 文档技能
+# Documents Skills
 
-维护 PPT、Word 技能提示词，以及不依赖数据库的 Office 渲染与 PPT 元素修改能力。仓库为私有仓库，不存放应用凭据或用户文档。
+独立的 Word、PowerPoint、Excel 技能与 Python 工具包。无需 QuickerWrite 服务端、数据库、模型密钥或网络服务。提供可编辑 Office 文件生成、结构检查、局部修改、CSV 交换及可选的 PDF/PNG 转换。
 
-## 文档处理流程
+## 安装与快速开始
 
-- PPT：HTML 布局 → Chromium 提取 → 可编辑 PPTX → LibreOffice 转 PDF → PDFium 页面图 → AI 检查 → 带版本校验的元素精修。
-- Word：保持原生 DOCX 生成，使用同一条实际文件渲染与检查链路，不经过 HTML 转换。
-- 选中元素通过独立的结构化上下文传递；用户输入区只显示修改要求，文件编号、哈希和内部提示词不进入可编辑正文。
-
-## 安装与运行
-
-Python 3.12 及以上，安装 `pip install .`。运行环境需要 LibreOffice Writer/Impress/Calc、Chromium、Noto CJK 和 Liberation 字体。
+需要 Python 3.12+。从源码安装（不假定 PyPI 已发布）：
 
 ```sh
-qw-documents-worker --format docx < input.docx > output.pdf
+git clone https://github.com/QuickerWrite/documents-skills.git
+cd documents-skills
+python -m venv .venv
+. .venv/bin/activate
+pip install .
+document-skills doctor
+document-skills create examples/budget.json budget.xlsx
+document-skills inspect budget.xlsx --sheet Budget --range A1:B4
+document-skills create examples/report.json report.docx
+document-skills create examples/deck.json deck.pptx
 ```
 
-工作器从标准输入读取文件，向标准输出写入 PDF，无需数据库权限。PDFium 渲染与 PPT 元素读取、精修函数也可供任务适配层调用。
+仅生成/编辑 Office 文件不需要 LibreOffice。PDF 转换与 Excel 重算需要自行安装 LibreOffice（Linux/macOS；Windows 可通过 WSL）及所需字体。可用 `LIBREOFFICE_BIN` 指定程序路径。
 
-## 发布与部署
+```sh
+document-skills recalculate budget.xlsx calculated.xlsx
+document-skills render calculated.xlsx budget.pdf
+document-skills preview budget.pdf page-1.png --page 1
+```
 
-服务端独立的 `worker-office` 队列负责权限、取消、存储和版本校验。发布包固定本仓库的 Git 提交，并使用 SHA-256 清单验证随包源码；qwctl 统一安装依赖、检查实际渲染并管理独立服务或容器。生产机器不需要 GitHub 凭据。更新时修改固定版本并重新构建服务端发布包，再走常规 qwctl 升级流程。
+默认不覆盖现有文件；明确需要时使用 `--overwrite`。读取失败或转换失败返回非零退出码，不交付部分输出。旧入口 `qw-documents-worker --format docx < input.docx > output.pdf` 保持兼容。
 
-Dashi、Guizang 保持独立的 AGPL 引擎服务，不把其实现复制到本私有仓库。当前拆分覆盖渲染、PPT 元素操作和提示词；HTML 转换与生成适配层仍位于服务端工作器。
+## 能力与边界
 
-## 维护约定
+| 格式 | 支持 | 明确边界 |
+|---|---|---|
+| Excel | 多工作表、显式公式、样式、列宽、冻结行列、筛选、柱状/折线图、范围检查、单元格编辑、CSV | openpyxl 不计算公式；重算需 LibreOffice；复杂 Excel 特性可能发生变化 |
+| Word | 原生标题、段落、列表、表格、图片、分页等生成，正文/表格检查，正文 run 编辑 | 不提供修订、批注及复杂域编辑；检查不是完整正文 XML 展开 |
+| PowerPoint | 原生可编辑幻灯片，模板主题，元素检查和局部 XML 修改 | 局部修改不支持组内对象、继承坐标或空文本对象 |
+| PDF/PNG | Office→PDF、指定页 PNG 预览 | 依赖字体与 LibreOffice，无法保证与 Microsoft Office 像素一致 |
 
-所有 QuickerWrite 仓库的 GitHub 简介统一使用中文，README 的项目说明也使用中文；技术名称、命令和接口标识保留原文。
+`validate` 检查安全边界与解析可读性，不是完整 OOXML schema、公式正确性或视觉质量认证。请保留源文件，重算后检查公式与缓存，并实际检查预览。
+
+## 安装技能
+
+将 `skills/word`、`skills/ppt`、`skills/excel` 复制到支持 SKILL.md 的客户端技能目录，例如 `~/.codex/skills/`。每个目录应完整保留 `references`。同时在该客户端可用的 Python 环境安装本工具包。wheel 也在 `<环境前缀>/share/document-skills/skills/` 内附带这三套技能。
+
+技能使用本地真实可执行命令，不依赖私有平台工具名称。应用平台的 file_id、鉴权、队列和用户确认交互属于适配层，见 [集成指南](docs/integration.md)。
+
+## 文档
+
+- [API 和命令](docs/api.md)
+- [安全边界](SECURITY.md)
+- [研究来源与许可证决策](docs/research.md)
+- [开发与验证](CONTRIBUTING.md)
+- 格式说明：[Excel](skills/excel/references/workflows.md)、[Word](skills/word/references/workflows.md)、[PPT](skills/ppt/references/workflows.md)
+
+本仓库使用 MIT 许可证。没有复制限制再分发的 Office skill 源码。测试使用合成数据，不附带客户文件或密钥。

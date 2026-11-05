@@ -1,0 +1,1 @@
+{"sheets":[{"name":"Budget","rows":[["Item","Cost"],["Books",120],["Travel",80],["Total",{"formula":"=SUM(B2:B3)"}]],"freeze_panes":"A2","widths":{"A":24,"B":18},"styles":[{"range":"A1:B1","bold":true,"fill":"17365D","font_color":"FFFFFF"},{"range":"B2:B4","number_format":"#,##0.00"}],"charts":[{"type":"bar","title":"Costs","data":"B1:B3","categories":"A2:A3","anchor":"D2"}]}]}
