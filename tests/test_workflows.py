@@ -186,3 +186,28 @@ def test_real_conversion_and_calculation():
                 _page_png(document, 0)
         finally:
             document.close()
+
+
+def test_fallback_slide_does_not_duplicate_or_indent_peer_facts():
+    from pptx import Presentation
+
+    facts = ["Books: 120", "Travel: 80", "Total: 200"]
+    data = render_ppt(
+        "Budget", [{"kind": "slide", "text": "Budget", "meta": {"bullets": facts}}], {}
+    )
+    slide = Presentation(BytesIO(data)).slides[0]
+    texts = [
+        p.text
+        for shape in slide.shapes
+        if shape.has_text_frame
+        for p in shape.text_frame.paragraphs
+    ]
+    assert all(texts.count(fact) == 1 for fact in facts)
+    paragraphs = [
+        p
+        for shape in slide.shapes
+        if shape.has_text_frame
+        for p in shape.text_frame.paragraphs
+        if p.text in facts
+    ]
+    assert {p.level for p in paragraphs} == {0}

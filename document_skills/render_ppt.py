@@ -821,13 +821,11 @@ def _render_layout_elements(
             for idx, line in enumerate(lines):
                 paragraph = tf.paragraphs[0] if idx == 0 else tf.add_paragraph()
                 paragraph.text = line
-                paragraph.level = (
-                    int(_safe_float(element.get("level"), 0))
-                    if idx == 0
-                    else int(_safe_float(element.get("level"), 1))
+                paragraph.level = max(
+                    0, min(8, int(_safe_float(element.get("level"), 0)))
                 )
                 paragraph.font.name = font_name
-                paragraph.font.size = PptPt(max(12, font_size - (0 if idx == 0 else 1)))
+                paragraph.font.size = PptPt(max(12, font_size))
                 paragraph.font.color.rgb = PptRGB(*color_rgb)
                 paragraph.font.bold = bold
                 paragraph.font.italic = italic
@@ -896,7 +894,8 @@ def _build_fallback_layout_elements(
         ]
 
     if variant == "split":
-        elements: list[dict] = [
+        # A split layout needs two distinct regions, not a duplicate of the first fact.
+        elements = [
             {
                 "kind": "title",
                 "text": slide_title,
@@ -911,23 +910,13 @@ def _build_fallback_layout_elements(
                 "items": lines,
                 "x": 6,
                 "y": 20,
-                "w": 48,
+                "w": 48 if has_image else 88,
                 "h": 66,
-                "font_size": 19,
-            },
-            {
-                "kind": "text",
-                "text": lines[0],
-                "x": 58,
-                "y": 22,
-                "w": 34,
-                "h": 18,
-                "font_size": 24,
-                "bold": True,
+                "font_size": 22,
             },
         ]
         if has_image:
-            elements.append({"kind": "image", "x": 58, "y": 44, "w": 34, "h": 40})
+            elements.append({"kind": "image", "x": 58, "y": 22, "w": 34, "h": 60})
         return elements
 
     if variant == "focus":
@@ -962,13 +951,13 @@ def _build_fallback_layout_elements(
                     "items": remaining,
                     "x": 12,
                     "y": 52,
-                    "w": 76,
+                    "w": 44 if has_image else 76,
                     "h": 32,
                     "font_size": 18,
                 }
             )
         if has_image:
-            elements.append({"kind": "image", "x": 36, "y": 56, "w": 28, "h": 30})
+            elements.append({"kind": "image", "x": 62, "y": 52, "w": 28, "h": 32})
         return elements
 
     elements = [
