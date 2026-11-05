@@ -53,7 +53,18 @@ def _guard_ooxml(data: bytes) -> None:
                     )
                 if part.file_size > 50 * 1024 * 1024:
                     raise ValueError("Office 文档包含超大内部资源")
-                if "vbaproject" in name or name.startswith("xl/externallinks/"):
+                if (
+                    "vbaproject" in name
+                    or name == "xl/connections.xml"
+                    or name.startswith(
+                        (
+                            "xl/externallinks/",
+                            "xl/macrosheets/",
+                            "xl/dialogsheets/",
+                            "xl/querytables/",
+                        )
+                    )
+                ):
                     raise ValueError("不处理包含宏或外部工作簿链接的 Office 文件")
                 if name.endswith(".rels"):
                     root = ElementTree.fromstring(package.read(part))
@@ -65,6 +76,18 @@ def _guard_ooxml(data: bytes) -> None:
                 if name.endswith(".xml"):
                     root = ElementTree.fromstring(package.read(part))
                     for node in root.iter():
+                        if name == "[content_types].xml" and any(
+                            marker in node.get("ContentType", "").lower()
+                            for marker in (
+                                "macroenabled",
+                                "macrosheet",
+                                "vbaproject",
+                                "activex",
+                            )
+                        ):
+                            raise ValueError(
+                                "Macro-enabled Office packages are unsupported"
+                            )
                         if name.startswith("xl/") and node.tag.rsplit("}", 1)[-1] in {
                             "f",
                             "definedName",

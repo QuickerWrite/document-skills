@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "quickerwrite-documents-skills"
-version = "0.2.0"
+version = "0.2.1"
 description = "Standalone Word, PowerPoint and Excel skills, generation, editing and rendering tools"
 readme = "README.md"
 license = "MIT"

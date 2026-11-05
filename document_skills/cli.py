@@ -16,7 +16,7 @@ from .render_ppt import render_ppt
 
 def main(argv=None):
     parser = argparse.ArgumentParser(prog="document-skills")
-    parser.add_argument("--version", action="version", version="0.2.0")
+    parser.add_argument("--version", action="version", version="0.2.1")
     sub = parser.add_subparsers(dest="command", required=True)
     sub.add_parser("doctor", help="Report optional conversion dependency")
     for cmd in (

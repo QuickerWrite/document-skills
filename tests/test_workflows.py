@@ -211,3 +211,31 @@ def test_fallback_slide_does_not_duplicate_or_indent_peer_facts():
         if p.text in facts
     ]
     assert {p.level for p in paragraphs} == {0}
+
+
+@pytest.mark.parametrize(
+    "part",
+    [
+        "xl/macrosheets/sheet1.xml",
+        "xl/connections.xml",
+        "xl/queryTables/queryTable1.xml",
+    ],
+)
+def test_legacy_macros_and_data_connections_rejected(part):
+    out = BytesIO()
+    with zipfile.ZipFile(out, "w") as z:
+        z.writestr("[Content_Types].xml", "<Types/>")
+        z.writestr(part, "<root/>")
+    with pytest.raises(ValueError):
+        _guard_ooxml(out.getvalue())
+
+
+def test_macro_enabled_content_type_rejected():
+    out = BytesIO()
+    with zipfile.ZipFile(out, "w") as z:
+        z.writestr(
+            "[Content_Types].xml",
+            '<Types><Override ContentType="application/vnd.ms-excel.sheet.macroEnabled.main+xml"/></Types>',
+        )
+    with pytest.raises(ValueError):
+        _guard_ooxml(out.getvalue())
