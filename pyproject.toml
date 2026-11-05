@@ -5,6 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "quickerwrite-documents-skills"
 version = "0.2.1"
+authors = [{name = "whtry", email = "whtrys@outlook.com"}]
 description = "Standalone Word, PowerPoint and Excel skills, generation, editing and rendering tools"
 readme = "README.md"
 license = "MIT"
@@ -15,8 +16,8 @@ dependencies = ["defusedxml>=0.7.1", "pypdfium2>=4.30", "Pillow>=10", "python-pp
 dev = ["pytest>=8", "build>=1.2", "ruff>=0.11", "PyYAML>=6"]
 
 [project.urls]
-Repository = "https://github.com/QuickerWrite/documents-skills"
-Issues = "https://github.com/QuickerWrite/documents-skills/issues"
+Repository = "https://github.com/QuickerWrite/document-skills"
+Issues = "https://github.com/QuickerWrite/document-skills/issues"
 
 [project.scripts]
 qw-documents-worker = "document_skills.worker:main"

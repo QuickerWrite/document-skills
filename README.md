@@ -1,4 +1,4 @@
-# Documents Skills
+# Document Skills
 
 独立的 Word、PowerPoint、Excel 技能与 Python 工具包。无需 QuickerWrite 服务端、数据库、模型密钥或网络服务。提供可编辑 Office 文件生成、结构检查、局部修改、CSV 交换及可选的 PDF/PNG 转换。
 
@@ -7,8 +7,8 @@
 需要 Python 3.12+。从源码安装（不假定 PyPI 已发布）：
 
 ```sh
-git clone https://github.com/QuickerWrite/documents-skills.git
-cd documents-skills
+git clone https://github.com/QuickerWrite/document-skills.git
+cd document-skills
 python -m venv .venv
 . .venv/bin/activate
 pip install .
@@ -55,3 +55,7 @@ document-skills preview budget.pdf page-1.png --page 1
 - 格式说明：[Excel](skills/excel/references/workflows.md)、[Word](skills/word/references/workflows.md)、[PPT](skills/ppt/references/workflows.md)
 
 本仓库使用 MIT 许可证。没有复制限制再分发的 Office skill 源码。测试使用合成数据，不附带客户文件或密钥。
+
+## 作者
+
+[whtry](https://github.com/whtry) · whtrys@outlook.com
