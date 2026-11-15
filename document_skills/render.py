@@ -19,6 +19,37 @@ def _bounded_bytes(data: bytes) -> bytes:
     return data
 
 
+def _guard_word_fields(root) -> None:
+    """Field instructions can fetch files or invoke DDE without relationships.
+
+    Word commonly splits an instruction across runs, so checking individual
+    instrText nodes misses e.g. INCLUDE + TEXT. Never send those fields to LO.
+    """
+    namespace = "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}"
+    stack, instructions, detached = [], [], []
+    for node in root.iter():
+        if node.tag in {namespace + "altChunk", namespace + "object", namespace + "control"}:
+            raise ValueError("不处理包含活动嵌入内容的 Word 文件")
+        if node.tag == namespace + "fldSimple":
+            instructions.append(node.get(namespace + "instr", ""))
+        elif node.tag == namespace + "fldChar":
+            kind = node.get(namespace + "fldCharType")
+            if kind == "begin":
+                stack.append([])
+            elif kind == "end":
+                if not stack:
+                    raise ValueError("Word 字段结构不完整")
+                instructions.append("".join(stack.pop()))
+        elif node.tag == namespace + "instrText":
+            (stack[-1] if stack else detached).append(node.text or "")
+    if stack:
+        raise ValueError("Word 字段结构不完整")
+    instructions.append("".join(detached))
+    for instruction in instructions:
+        if re.match(r"\s*(?:DDEAUTO|DDE|INCLUDETEXT|INCLUDEPICTURE|LINK|DATABASE|IMPORT|RD)\b", instruction, re.I):
+            raise ValueError("不处理会访问外部网络、文件或程序的 Word 字段")
+
+
 def _guard_ooxml(data: bytes) -> None:
     """在 LO 打开之前拒绝解压炸弹、宏和链接资源。"""
     _bounded_bytes(data)
@@ -75,6 +106,8 @@ def _guard_ooxml(data: bytes) -> None:
                             raise ValueError("请先将文档外部引用资源嵌入文件后再转换")
                 if name.endswith(".xml"):
                     root = ElementTree.fromstring(package.read(part))
+                    if name.startswith("word/"):
+                        _guard_word_fields(root)
                     for node in root.iter():
                         if name == "[content_types].xml" and any(
                             marker in node.get("ContentType", "").lower()

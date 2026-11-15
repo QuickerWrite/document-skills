@@ -109,6 +109,33 @@ def test_named_formula_guard():
         _guard_ooxml(output.getvalue())
 
 
+@pytest.mark.parametrize("opcode", ["DDE", "DDEAUTO", "INCLUDETEXT", "INCLUDEPICTURE", "LINK", "DATABASE", "RD"])
+@pytest.mark.parametrize("simple", [False, True])
+def test_word_external_fields_are_blocked_even_when_split_across_runs(opcode, simple):
+    namespace = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main'
+    if simple:
+        field = f'<w:fldSimple w:instr="{opcode} file:///private/fixture"/>'
+    else:
+        field = ('<w:r><w:fldChar w:fldCharType="begin"/></w:r>'
+                 f'<w:r><w:instrText>{opcode[:3]}</w:instrText></w:r>'
+                 f'<w:r><w:instrText>{opcode[3:]} file:///private/fixture</w:instrText></w:r>'
+                 '<w:r><w:fldChar w:fldCharType="end"/></w:r>')
+    output = BytesIO()
+    with zipfile.ZipFile(output, 'w') as package:
+        package.writestr('[Content_Types].xml', '<Types/>')
+        package.writestr('word/document.xml', f'<w:document xmlns:w="{namespace}"><w:p>{field}</w:p></w:document>')
+    with pytest.raises(ValueError, match='Word 字段'):
+        _guard_ooxml(output.getvalue())
+
+
+def test_word_inert_page_fields_remain_supported():
+    output = BytesIO()
+    with zipfile.ZipFile(output, 'w') as package:
+        package.writestr('[Content_Types].xml', '<Types/>')
+        package.writestr('word/document.xml', '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:fldSimple w:instr="PAGE"/></w:document>')
+    _guard_ooxml(output.getvalue())
+
+
 def test_word_runs_preserved():
     doc = Document()
     p = doc.add_paragraph()
